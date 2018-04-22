@@ -2,6 +2,7 @@
 
 //
 // pollyを並列実行して、そのあとクライアントでごにょごにょする
+// async/awaitの例
 //
 
 var http = require('http');
@@ -24,24 +25,12 @@ var server = http.createServer();
 // イベントハンドラを登録する
 server.on('request',function(req,res) {
     res.writeHead(200,{'Content-Type': 'text/plain'});
-    speech().then(data => {
-        console.log("polly end");
-        return execSh();
-    }).then(data => {
-        console.log("exec end");
-    });
+    speech();
     res.end();
 })
 
 // イベントの待機
 server.listen(3000);
-
-
-function execSh() {
-    console.log("exec start");
-    const execSync = promisify(exec);
-    return execSync('./test.sh');
-}
 
 async function speech() {
     let speechParams = {
@@ -51,7 +40,11 @@ async function speech() {
         SampleRate: '16000',
         TextType: 'text'
     };
-
+    const execSync = promisify(exec);
     console.log("create speech");
-    return await polly.synthesizeSpeech(speechParams).promise();
+    
+    await polly.synthesizeSpeech(speechParams).promise();
+    console.log("end speech");
+    await execSync('./test.sh');
+    console.log("end exec");
 }
